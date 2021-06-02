@@ -1,6 +1,8 @@
 var mongoose = require('mongoose');
+var Price = require('./priceModel');
 
-var productSchema = mongoose.Schema({
+
+var productSchema = new mongoose.Schema({
     uniqueIdentifier: {
         type: String,
         require: true,
@@ -31,7 +33,11 @@ var productSchema = mongoose.Schema({
     subCat: {
         type: String,
         require: true
-    }
+    },
+    imageUrl:{
+        type: String,
+    },
+    price: Price
 }, {timestamps: true});
 
 var Product = module.exports = mongoose.model('product', productSchema);

@@ -1,5 +1,24 @@
-Product = require('./../models/ProductModel');
+Product = require('../models/productModel');
 
+function createProduct(articleNumber, label, manufacturer, shortDescription, extendedDescription, mainCat,subCat, imageUrl, inprice, outPrice, tax) {
+    var product = new Product({
+        uniqueIdentifier: articleNumber + manufacturer,
+        articleNumber: articleNumber,
+        label: label,
+        manufacturer: manufacturer,
+        shortDescription: shortDescription,
+        extendedDescription: extendedDescription,
+        mainCat: mainCat,
+        subCat: subCat,
+        imageUrl: imageUrl,
+        price: {
+            inprice: inprice,
+            outPrice: outPrice,
+            tax: tax
+        }
+    });
+    return product;
+}
 
 exports.index = function (req, res) {
     Product.get(function (err, products) {
@@ -8,56 +27,48 @@ exports.index = function (req, res) {
                 status: "error",
                 message: err,
             });
-        }
-        res.json({
-            status: "success",
-            message: "Products retrieved successfully",
-            data: products
-        });
-
-    })
-};
-
-exports.new = function (req, res) {
-    var product = new Product();
-    product.uniqueIdentifier = req.body.articleNumber + req.body.manufacturer
-    product.articleNumber = req.body.articleNumber;
-    product.label = req.body.label;
-    product.manufacturer = req.body.shortDescription;
-    product.extendedDescription = req.body.extendedDescription;
-    product.mainCat = req.body.mainCat;
-    product.subCat = req.body.subCat;
-
-    product.save(function (err) {
-        if (err)
-            res.json(err);
-        else {
+        } else {
             res.json({
-                message: 'New Product created!',
-                data: contact
+                status: "success",
+                message: "Products retrieved successfully",
+                data: products
             });
         }
     })
 };
 
 exports.new = function (req, res) {
-    req.body.forEach(element => {
-        var product = new Product();
-        product.uniqueIdentifier = element.articleNumber + element.manufacturer
-        product.articleNumber = element.articleNumber;
-        product.label = element.label;
-        product.manufacturer = element.shortDescription;
-        product.extendedDescription = element.extendedDescription;
-        product.mainCat = element.mainCat;
-        product.subCat = element.subCat;
+    var product = createProduct(req.body.articleNumber, req.body.label, req.body.manufacturer, req.body.shortDescription, req.body.extendedDescription, req.body.mainCat, req.body.subCat, req.body.imageUrl, req.body.price.inprice, req.body.price.outPrice, req.body.price.tax)
+    product.save(function (err) {
+        if (err)
+            res.json(err);
+        else {
+            res.json({
+                message: 'New Product created!',
+                data: product
+            });
+        }
+    })
+};
 
-        product.save(function (err) {
-            if (err)
-                res.status(400).json(err); //To-Do: might wan to just save the products that failed and continue the rest
+exports.many = function (req, res) {
+    var inserted = 0,
+        ignored = 0,
+        count = 0;
+
+    req.body.forEach(element => {
+        count++;
+        var product = createProduct(element.articleNumber, element.label, element.manufacturer, element.shortDescription, element.extendedDescription, element.mainCat, element.subCat, element.imageUrl, element.price.inprice, element.price.outPrice, element.price.tax)
+        product.save().then(function (product) {
+            inserted++;
+        }).catch(err => {
+            ignored++;
         })
-    });
+    })
+    res.json({
+        message: 'Inserted ' + inserted + ": " + 'Ignored ' + ignored + ": " + 'Total product in request was ' + count
+    })
     //To-Do: Add better return
-    res.json({message: 'insert many'})
 };
 
 exports.view = function (req, res) {
@@ -78,10 +89,12 @@ exports.update = function (req, res) {
         product.uniqueIdentifier = element.articleNumber + element.manufacturer
         product.articleNumber = element.articleNumber;
         product.label = element.label;
-        product.manufacturer = element.shortDescription;
+        product.manufacturer = element.manufacturer;
+        product.shortDescription = element.shortDescription;
         product.extendedDescription = element.extendedDescription;
         product.mainCat = element.mainCat;
         product.subCat = element.subCat;
+        product.imageUrl = element.imageUrl;
 
         product.save(function (err) {
             if (err)
@@ -97,13 +110,16 @@ exports.update = function (req, res) {
 };
 
 exports.delete = function (req, res) {
-    Product.remove({_id: req.params.product_id}, function (err, product) {
+    Product.remove({
+        _id: req.params.product_id
+    }, function (err, product) {
         if (err)
             res.send(err);
-        else{
+        else {
             res.json({
-            status: "success",
-            message: 'product deleted'});
+                status: "success",
+                message: 'product deleted'
+            });
         }
     });
 };

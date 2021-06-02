@@ -3,6 +3,8 @@ let bodyParser = require('body-parser');
 let mongoose = require('mongoose');
 let app = express();
 const fs = require('fs');
+var morgan = require('morgan')
+
 
 let config = JSON.parse(fs.readFileSync('app.config'));
 let dbConnection = config.dbConnection;
@@ -22,6 +24,9 @@ app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
     next();
 });
+
+//use morgana for request logging
+app.use(morgan('tiny'));
 
 // Connect to Mongoose and set connection variable
 mongoose.connect(connectionString, {
